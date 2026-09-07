@@ -12,7 +12,7 @@ import datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 RESULTS = os.path.join(ROOT, "results")
-LANGS = ["systemverilog", "systemverilog_v2", "chisel", "spade"]
+LANGS = ["systemverilog", "systemverilog_v2", "chisel", "spade", "spinal"]
 CASES = ["fifo", "uart", "fir", "matmul", "i2c_master"]
 
 

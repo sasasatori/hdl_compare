@@ -51,6 +51,18 @@ impl/
   该命令必须生成 `impl/spade/<case>/build/spade.sv`；
   - swim.toml 的 `name` 必须等于案例目录名（如 `fifo`），顶层实体名必须为 `<top>_impl`（如 `sync_fifo_impl`）；Spade 生成的模块名为 `<name>::<entity>`，形如 `fifo::sync_fifo_impl`；
 
+
+### 2.4 SpinalHDL 交付
+
+- 在 `impl/spinal/<case>/` 下建立 scala-cli 工程（模板见 `suite/common/templates/spinal/`，版本由模板固定，不得更改）；
+- 工程必须恰好含一个 main object，评估命令为：
+  ```
+  cd impl/spinal/<case> && scala-cli run .
+  ```
+  该命令必须重新生成 `impl/spinal/<case>/build/<top>.v`（`SpinalConfig(targetDirectory = "build").generateVerilog(...)`，顶层组件类名 = SPEC 顶层模块名，小写下划线）；
+- 端口逐个 `in/out` 声明（val 名 = 端口名；不要用 io Bundle，会带 `io_` 前缀违反端口契约）；时钟域用 `ClockDomain(clk, rst, ClockDomainConfig(resetActiveLevel=HIGH))` 并把寄存器逻辑包在 `ClockingArea(cd)` 里（模板已含）；
+- 生成代码必须可被 Verilator 仿真（cocotb 直接仿真 build/*.v）。
+
 ## 3. 评估命令（代理的自测入口）
 
 一切自测都必须通过以下统一入口（登录节点可直接运行，负载很小）：

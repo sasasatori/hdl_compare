@@ -27,7 +27,7 @@ CASES = {  # case -> 顶层模块名
     "matmul": "matmul4x4",
     "i2c_master": "i2c_master",
 }
-LANGS = ["systemverilog", "systemverilog_v2", "chisel", "spade"]
+LANGS = ["systemverilog", "systemverilog_v2", "chisel", "spade", "spinal"]
 
 LIBERTY = os.path.join(
     os.environ.get("PDK_ROOT", "/fact_home/yiyangyuan/tools/pdk/ciel/sky130/versions/0fe599b2afb6708d281543108caf8310912f54af"),
@@ -59,14 +59,15 @@ def find_rtl(lang, case, impl_dir):
             raise RuntimeError(f"未找到源文件: {impl_dir}/src/*.sv")
         return files, build_log
 
-    if lang == "chisel":
+    if lang in ("chisel", "spinal"):
         rc, out = sh(["scala-cli", "run", "."], cwd=impl_dir, timeout=1800)
         build_log += out
         if rc != 0:
-            raise RuntimeError(f"chisel 生成失败 (rc={rc})")
-        files = sorted(glob.glob(os.path.join(impl_dir, "build", "*.sv")))
+            raise RuntimeError(f"{lang} 生成失败 (rc={rc})")
+        files = sorted(glob.glob(os.path.join(impl_dir, "build", "*.sv"))
+                       + glob.glob(os.path.join(impl_dir, "build", "*.v")))
         if not files:
-            raise RuntimeError(f"chisel 未产出 build/*.sv")
+            raise RuntimeError(f"{lang} 未产出 build/*.sv|*.v")
         return files, build_log
 
     if lang == "spade":
@@ -254,10 +255,12 @@ def run_sta(top, mapped, workdir, log=None):
         patch["power_w"] = float(m.group(1))
     return patch
 
+
 def count_loc(lang, impl_dir):
     pats = {"systemverilog": ["src/*.sv", "src/*.v"],
             "systemverilog_v2": ["src/*.sv", "src/*.v"],
             "chisel": ["**/*.scala"],
+            "spinal": ["**/*.scala"],
             "spade": ["src/*.spade", "src/*.v"]}[lang]
     total, files = 0, 0
     for pat in pats:
