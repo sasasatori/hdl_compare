@@ -3,5 +3,6 @@
   "systemverilog": {"seconds": 2688, "human": "44m48s"},
   "systemverilog_v2": {"seconds": 5400, "human": "1h30m"},
   "chisel": {"seconds": 4620, "human": "1h17m"},
-  "spade": {"seconds": 6240, "human": "1h44m"}
+  "spade": {"seconds": 6240, "human": "1h44m"},
+  "spinal": {"seconds": 9120, "human": "2h32m"}
 }

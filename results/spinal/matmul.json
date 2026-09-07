@@ -1,0 +1,67 @@
+{
+ "lang": "spinal",
+ "case": "matmul",
+ "top": "matmul4x4",
+ "seed": 42,
+ "timestamp": "2026-09-08T00:25:04",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/spinal/matmul/build/matmul4x4.v"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 0.2,
+  "tests": [
+   {
+    "name": "test_identity",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_known",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_random",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_extremes",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_backpressure",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_backtoback",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 6,
+  "total": 6
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 253325.4592,
+  "cells": 32126,
+  "sta_rc": 0,
+  "crit_ns": 6.09,
+  "fmax_mhz": 164.3,
+  "power_w": 0.00811
+ },
+ "loc": {
+  "lines": 60,
+  "files": 1
+ },
+ "elapsed_s": 101.4
+}

@@ -1,0 +1,72 @@
+{
+ "lang": "spinal",
+ "case": "i2c_master",
+ "top": "i2c_master",
+ "seed": 42,
+ "timestamp": "2026-09-08T00:33:57",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/spinal/i2c_master/build/i2c_master.v"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 0.3,
+  "tests": [
+   {
+    "name": "test_start_stop",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_write_ack",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_write_nack",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_read",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_clock_stretch",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_reg_read_seq",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_multi_byte",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 7,
+  "total": 7
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 3831.1744,
+  "cells": 448,
+  "sta_rc": 0,
+  "crit_ns": 3.26,
+  "fmax_mhz": 307.04,
+  "power_w": 0.000298
+ },
+ "loc": {
+  "lines": 162,
+  "files": 1
+ },
+ "elapsed_s": 2.5
+}

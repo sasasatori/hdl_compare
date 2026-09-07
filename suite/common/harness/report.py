@@ -42,7 +42,7 @@ def main():
     add = lines.append
     add("# HDL 对比评估报告")
     add(f"\n生成时间: {datetime.datetime.now().isoformat(timespec='seconds')}\n")
-    add("评分: 功能 40% + 面积 20% + 时序 20% + 功耗 20% (各项均按同案例三语言最优值归一化; 功耗为 OpenSTA 统一翻转率 0.1@100MHz 名义值)\n")
+    add("评分: 功能 40% + 面积 20% + 时序 20% + 功耗 20% (各项均按同案例各语言最优值归一化; 功耗为 OpenSTA 统一翻转率 0.1@100MHz 名义值)\n")
 
     summary = {l: [] for l in LANGS}
     for case in CASES:

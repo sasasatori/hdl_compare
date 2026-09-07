@@ -1,0 +1,20 @@
+{
+  "name": "scala-cli",
+  "argv": [
+    "/fact_home/yiyangyuan/tools/bin/scala-cli",
+    "bsp",
+    "--json-options",
+    "/fact_home/yiyangyuan/workspace/projects/hdl_compare/impl/spinal/i2c_master/.scala-build/ide-options-v2.json",
+    "--json-launcher-options",
+    "/fact_home/yiyangyuan/workspace/projects/hdl_compare/impl/spinal/i2c_master/.scala-build/ide-launcher-options.json",
+    "--envs-file",
+    "/fact_home/yiyangyuan/workspace/projects/hdl_compare/impl/spinal/i2c_master/.scala-build/ide-envs.json",
+    "/fact_home/yiyangyuan/workspace/projects/hdl_compare/impl/spinal/i2c_master"
+  ],
+  "version": "1.16.0",
+  "bspVersion": "2.1.1",
+  "languages": [
+    "scala",
+    "java"
+  ]
+}

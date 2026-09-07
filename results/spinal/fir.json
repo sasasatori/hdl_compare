@@ -1,0 +1,73 @@
+{
+ "lang": "spinal",
+ "case": "fir",
+ "top": "fir16",
+ "seed": 42,
+ "timestamp": "2026-09-08T02:14:01",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/spinal/fir/build/fir16.v"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 5.0,
+  "tests": [
+   {
+    "name": "test_impulse",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_known_coefs",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_random",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_saturation",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_backpressure",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_throughput",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_coef_reload",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 7,
+  "total": 7
+ },
+ "loc": {
+  "lines": 71,
+  "files": 1
+ },
+ "elapsed_s": 6.5,
+ "synth": {
+  "ok": true,
+  "area_um2": 254840.6624,
+  "cells": 33915,
+  "has_latch": false,
+  "flow_note": "abc 默认脚本 &fraig -x 在本网表上 SAT 扫描不收敛(>30min), 用去掉 &fraig 的等价脚本 (其余阶段相同) 完成; 对 spade/fir 同脚本复测面积差 +0.6%, 判为可比",
+  "sta_rc": 0,
+  "crit_ns": 14.26,
+  "fmax_mhz": 70.14,
+  "power_w": 0.00989
+ }
+}

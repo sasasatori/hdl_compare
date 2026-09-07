@@ -1,0 +1,67 @@
+{
+ "lang": "spinal",
+ "case": "fifo",
+ "top": "sync_fifo",
+ "seed": 42,
+ "timestamp": "2026-09-07T23:59:10",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/spinal/fifo/build/sync_fifo.v"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 0.3,
+  "tests": [
+   {
+    "name": "test_reset_state",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_single_xfer",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_fill_and_drain",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_simul_push_pop",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_random_stress",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_full_throughput",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 6,
+  "total": 6
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 5554.0768,
+  "cells": 319,
+  "sta_rc": 0,
+  "crit_ns": 2.66,
+  "fmax_mhz": 375.49,
+  "power_w": 0.000745
+ },
+ "loc": {
+  "lines": 46,
+  "files": 1
+ },
+ "elapsed_s": 3.4
+}
