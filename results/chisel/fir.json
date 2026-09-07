@@ -3,7 +3,7 @@
  "case": "fir",
  "top": "fir16",
  "seed": 42,
- "timestamp": "2026-09-07T08:57:47",
+ "timestamp": "2026-09-07T12:31:17",
  "build": {
   "ok": true,
   "sources": [
@@ -62,8 +62,9 @@
   "cells": 29787,
   "crit_ns": 16.7,
   "fmax_mhz": 59.87,
-  "power_w": 0.193,
-  "sta_rc": 0
+  "power_w": 0.0101,
+  "sta_rc": 0,
+  "power_model": "opensta_uniform_activity_0.1@100MHz"
  },
  "loc": {
   "lines": 82,

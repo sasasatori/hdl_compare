@@ -42,7 +42,7 @@ def main():
     add = lines.append
     add("# HDL 对比评估报告")
     add(f"\n生成时间: {datetime.datetime.now().isoformat(timespec='seconds')}\n")
-    add("评分: 功能 40% + 面积 20% + 时序 20% + 功耗 20% (各项均按同案例三语言最优值归一化; 功耗为 OpenSTA 名义值, 仅横向相对比较)\n")
+    add("评分: 功能 40% + 面积 20% + 时序 20% + 功耗 20% (各项均按同案例三语言最优值归一化; 功耗为 OpenSTA 统一翻转率 0.1@100MHz 名义值)\n")
 
     summary = {l: [] for l in LANGS}
     for case in CASES:
@@ -88,7 +88,7 @@ def main():
         total_func_t = sum(data[(lang, c)].get("sim", {}).get("total", 0) for c in CASES if (lang, c) in data)
         total_loc = sum(data[(lang, c)].get("loc", {}).get("lines", 0) for c in CASES if (lang, c) in data)
         add(f"| {lang} | {sum(scores)/len(CASES):.3f} | {total_func_p}/{total_func_t} | {total_loc} | {t_human} |")
-    add("\n\\* 功耗为 OpenSTA 名义值 (sky130 tt_025C_1v80, 100MHz, 默认翻转率), 绝对值偏大, 仅横向相对比较.\n")
+    add("\n\\* 功耗为 OpenSTA 名义值 (sky130 tt_025C_1v80, 100MHz, 统一翻转率 0.1), 仅横向相对比较; 绝对值不等于实测功耗.\n")
 
     out = os.path.join(RESULTS, "report.md")
     with open(out, "w") as f:

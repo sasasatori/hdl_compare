@@ -3,7 +3,7 @@
  "case": "i2c_master",
  "top": "i2c_master",
  "seed": 42,
- "timestamp": "2026-09-07T08:11:57",
+ "timestamp": "2026-09-07T12:31:22",
  "build": {
   "ok": true,
   "sources": [
@@ -62,8 +62,9 @@
   "cells": 447,
   "crit_ns": 2.93,
   "fmax_mhz": 341.58,
-  "power_w": 0.000271,
-  "sta_rc": 0
+  "power_w": 0.00026,
+  "sta_rc": 0,
+  "power_model": "opensta_uniform_activity_0.1@100MHz"
  },
  "loc": {
   "lines": 170,

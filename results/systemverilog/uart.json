@@ -3,7 +3,7 @@
  "case": "uart",
  "top": "uart_trx",
  "seed": 42,
- "timestamp": "2026-09-07T08:13:39",
+ "timestamp": "2026-09-07T12:31:12",
  "build": {
   "ok": true,
   "sources": [
@@ -66,8 +66,9 @@
   "cells": 517,
   "crit_ns": 2.78,
   "fmax_mhz": 359.75,
-  "power_w": 0.000386,
-  "sta_rc": 0
+  "power_w": 0.000446,
+  "sta_rc": 0,
+  "power_model": "opensta_uniform_activity_0.1@100MHz"
  },
  "loc": {
   "lines": 178,

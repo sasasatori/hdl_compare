@@ -76,7 +76,7 @@ python3 suite/common/harness/run_case.py <lang> <case> --sim icarus   # 换仿�
 | 功能正确性 | 40% | cocotb 测试通过率（各测试点权重见 SPEC） |
 | 面积 | 20% | Yosys 映射到 sky130_fd_sc_hd 的 `stat -liberty` 总面积 (µm²)，三语言归一化 |
 | 时序 | 20% | OpenSTA `report_clock_min_period` 关键路径延迟 → 等效 Fmax，三语言归一化 |
-| 功耗 | 20% | OpenSTA `report_power` 名义总功耗 (sky130 tt_025C_1v80, 100MHz, 默认翻转率)，三语言归一化，仅横向相对比较 |
+| 功耗 | 20% | OpenSTA `report_power` 总功耗 (sky130 tt_025C_1v80, 统一翻转率 0.1 @100MHz)，三语言归一化，仅横向相对比较 |
 
 综合报告由 `suite/common/harness/report.py` 生成。功能未全过的案例仍参与面积/时序/功耗比较，但会在报告中标注。
 

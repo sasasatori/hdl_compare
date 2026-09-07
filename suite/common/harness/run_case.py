@@ -213,13 +213,22 @@ write_verilog -noattr -noexpr {mapped}
         m = re.search(r"^\s+(\d+)\s+\S+\s+cells$", out, re.M)
     res["cells"] = int(m.group(1)) if m else None
 
-    # OpenSTA: 关键路径 (10ns 时钟约束, slack 反推) + 功耗 (默认翻转率 @100MHz)
+    # OpenSTA: 关键路径 (report_clock_min_period) + 功耗 (统一翻转率 0.1 @100MHz)
+    res.update(run_sta(top, mapped, workdir, log))
+    res["ok"] = res["area_um2"] is not None and res.get("crit_ns") is not None
+    return res
+
+
+def run_sta(top, mapped, workdir, log=None):
+    """OpenSTA: report_clock_min_period + report_power (统一翻转率 0.1@100MHz, 避免默认活动标注伪影).
+    返回 dict 补丁: crit_ns/fmax_mhz/power_w/sta_rc."""
     tcl_lines = [
         f"read_liberty {LIBERTY}",
         f"read_verilog {mapped}",
         f"link_design {top}",
         "create_clock -name core_clk -period 10.0 [get_ports clk]",
         "catch { set_false_path -from [get_ports rst] }",
+        "set_power_activity -global -activity 0.1",
         "report_clock_min_period",
         "report_power",
     ]
@@ -231,16 +240,15 @@ write_verilog -noattr -noexpr {mapped}
                       timeout=600, log=log)
     with open(os.path.join(workdir, "sta.log"), "w") as f:
         f.write(sta_out)
+    patch = {"sta_rc": rc2}
     m = re.search(r"period_min\s*=\s*([0-9.]+)\s+fmax\s*=\s*([0-9.]+)", sta_out)
     if m:
-        res["crit_ns"] = float(m.group(1))
-        res["fmax_mhz"] = float(m.group(2))
+        patch["crit_ns"] = float(m.group(1))
+        patch["fmax_mhz"] = float(m.group(2))
     m = re.search(r"^Total\s+(?:\S+\s+){3}(\S+)", sta_out, re.M)
     if m:
-        res["power_w"] = float(m.group(1))
-    res["sta_rc"] = rc2
-    res["ok"] = res["area_um2"] is not None and res.get("crit_ns") is not None
-    return res
+        patch["power_w"] = float(m.group(1))
+    return patch
 
 
 def count_loc(lang, impl_dir):
@@ -268,7 +276,10 @@ def main():
     ap.add_argument("--skip-sim", action="store_true")
     ap.add_argument("--skip-synth", action="store_true")
     ap.add_argument("--waves", action="store_true")
+    ap.add_argument("--only-power", action="store_true",
+                    help="只重算功耗/时序: 复用既有 mapped.v + 现有 json, 不重跑 build/sim/synth")
     args = ap.parse_args()
+
 
     top = CASES[args.case]
     impl_dir = os.path.join(ROOT, "impl", args.lang, args.case)
@@ -291,6 +302,23 @@ def main():
         "timestamp": datetime.datetime.now().isoformat(timespec="seconds"),
     }
     t0 = time.time()
+
+    if args.only_power:
+        json_path = _json_path(args)
+        mapped = os.path.join(res_dir, "synth", "mapped.v")
+        if not os.path.exists(json_path) or not os.path.exists(mapped):
+            print(f"[FAIL] --only-power 需要既有 {json_path} 与 {mapped}", flush=True)
+            sys.exit(2)
+        result = json.load(open(json_path))
+        patch = run_sta(top, mapped, os.path.join(res_dir, "synth"), log=log_file)
+        result.setdefault("synth", {}).update(patch)
+        result["synth"]["power_model"] = "opensta_uniform_activity_0.1@100MHz"
+        result["timestamp"] = datetime.datetime.now().isoformat(timespec="seconds")
+        with open(json_path, "w") as f:
+            json.dump(result, f, indent=1, ensure_ascii=False)
+        print(f"[POWER] {args.lang}/{args.case}: power={patch.get('power_w')} W, "
+              f"crit={patch.get('crit_ns')} ns -> {json_path}", flush=True)
+        sys.exit(0 if "power_w" in patch else 1)
 
     # 1. build / 收集 RTL
     try:
