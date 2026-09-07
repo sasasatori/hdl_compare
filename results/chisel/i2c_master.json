@@ -1,0 +1,72 @@
+{
+ "lang": "chisel",
+ "case": "i2c_master",
+ "top": "i2c_master",
+ "seed": 42,
+ "timestamp": "2026-09-07T08:58:05",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/chisel/i2c_master/build/i2c_master.sv"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 0.3,
+  "tests": [
+   {
+    "name": "test_start_stop",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_write_ack",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_write_nack",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_read",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_clock_stretch",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_reg_read_seq",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_multi_byte",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 7,
+  "total": 7
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 3582.1856,
+  "cells": 427,
+  "crit_ns": 3.1,
+  "fmax_mhz": 322.52,
+  "power_w": 0.000381,
+  "sta_rc": 0
+ },
+ "loc": {
+  "lines": 169,
+  "files": 1
+ },
+ "elapsed_s": 2.5
+}

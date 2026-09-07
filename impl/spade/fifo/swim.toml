@@ -1,0 +1,3 @@
+name = "fifo"
+
+compiler = { path = "/fact_home/yiyangyuan/tools/spade-src" }

@@ -1,0 +1,68 @@
+{
+ "lang": "spade",
+ "case": "fifo",
+ "top": "sync_fifo",
+ "seed": 42,
+ "timestamp": "2026-09-07T07:49:51",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/spade/fifo/build/spade.sv",
+   "impl/spade/fifo/src/top_wrapper.v"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 0.3,
+  "tests": [
+   {
+    "name": "test_reset_state",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_single_xfer",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_fill_and_drain",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_simul_push_pop",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_random_stress",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_full_throughput",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 6,
+  "total": 6
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 5636.656,
+  "cells": 283,
+  "crit_ns": 2.29,
+  "fmax_mhz": 436.18,
+  "power_w": 0.000751,
+  "sta_rc": 0
+ },
+ "loc": {
+  "lines": 59,
+  "files": 2
+ },
+ "elapsed_s": 2.6
+}

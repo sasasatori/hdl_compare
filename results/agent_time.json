@@ -1,0 +1,6 @@
+{
+  "_comment": "各语言代理完成全部 5 案例的端到端耗时 (subagent 任务时长, 含读SPEC/写码/迭代评估). 复跑代理后请更新本文件. 本轮: 2026-09-07, SvAgent=44m48s, ChiselAgent=1h17m, SpadeAgent=1h44m",
+  "systemverilog": {"seconds": 2688, "human": "44m48s"},
+  "chisel": {"seconds": 4620, "human": "1h17m"},
+  "spade": {"seconds": 6240, "human": "1h44m"}
+}

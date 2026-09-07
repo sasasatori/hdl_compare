@@ -1,0 +1,77 @@
+{
+ "lang": "chisel",
+ "case": "uart",
+ "top": "uart_trx",
+ "seed": 42,
+ "timestamp": "2026-09-07T08:57:43",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/chisel/uart/build/uart_trx.sv"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 1.1,
+  "tests": [
+   {
+    "name": "test_tx_single",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_tx_backtoback",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_single",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_stream",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_framing_err",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_false_start",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_loopback",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_reset_during_rx",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 8,
+  "total": 8
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 4858.4096,
+  "cells": 490,
+  "crit_ns": 3.64,
+  "fmax_mhz": 274.97,
+  "power_w": 0.00057,
+  "sta_rc": 0
+ },
+ "loc": {
+  "lines": 153,
+  "files": 1
+ },
+ "elapsed_s": 4.3
+}

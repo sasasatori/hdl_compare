@@ -1,0 +1,153 @@
+// I2C 主控制器 (字节级命令引擎). SCL 半周期 = div clk (div >= 4).
+// 开漏 4 线建模: scl_o/sda_o = 0 拉低, 1 释放; scl_i/sda_i 为总线实际电平.
+// 返回元组 (output__ 高位到低位):
+//   (cmd_ready, rsp_valid, rsp_data, rsp_nack, busy, scl_o, sda_o)
+
+enum I2S {
+    Idle,
+    StRelA,  // 重复 START 前置: SCL 低时先释放 SDA, 2 clk
+    StRel,   // START: 释放 SCL, 等总线高并计 div (建立/空闲时间)
+    StFall,  // START: SDA 拉低 (SCL 高), 保持 div
+    BitLowA, // 位低相 A: SCL 已低, 2 clk 保护 (SDA 不动)
+    BitLowB, // 位低相 B: 改 SDA, 计 div-2
+    BitHRel, // 释放 SCL, 等 scl_i==1 (时钟延展)
+    BitHigh, // SCL 高相, 计满 div; 中点采样
+    Finish,  // WRITE/READ 完成, rsp_valid 单拍
+    SpLow,   // STOP: SCL 低保护 2 clk
+    SpSda,   // STOP: SDA 拉低, 计 div
+    SpRel,   // STOP: 释放 SCL, 等 scl_i==1
+    SpHigh,  // STOP: SCL 高保持 div
+    SpStop,  // STOP: 释放 SDA (STOP 沿), 计 div (总线空闲)
+}
+
+entity i2c_master_impl(
+    clk: clock,
+    rst: bool,
+    div: uint<16>,
+    cmd_valid: bool,
+    cmd_op: uint<2>,
+    cmd_data: uint<8>,
+    scl_i: bool,
+    sda_i: bool,
+) -> (bool, bool, uint<8>, bool, bool, bool, bool) {
+    decl state;
+    decl cnt;
+    decl bit_idx;
+    decl scl_r;
+    decl sda_r;
+    decl tx_byte;
+    decl shift;
+    decl nack;
+    decl is_write;
+    decl is_read;
+    decl ack_nack;
+
+    // ---------- 常量/节拍 ----------
+    let div_m1: uint<16> = trunc(div - 1u16);
+    let div_m3: uint<16> = trunc(div - 3u16);
+    let half: uint<16> = trunc(div >>. 1u16);
+    let half_m1: uint<16> = trunc(half - 1u16);
+    let cnt_inc: uint<16> = trunc(cnt + 1u16);
+    let bit_idx_inc: uint<4> = trunc(bit_idx + 1u4);
+    let tx_shifted: uint<8> = trunc(tx_byte <<. 1u8);
+
+    let is_idle = match state { I2S::Idle => true, _ => false };
+    let is_bit_high = match state { I2S::BitHigh => true, _ => false };
+    let is_finish = match state { I2S::Finish => true, _ => false };
+
+    let accept = cmd_valid && is_idle;
+    let phase_done = cnt == div_m1;
+    let sample_pt = is_bit_high && cnt == half_m1;
+    let bit_end = is_bit_high && phase_done;
+
+    // 位低相 B 应驱动的 SDA (true=释放)
+    let bit_sda = if is_write {
+        if bit_idx == 8u4 { true } else { tx_byte.msb() }
+    } else {
+        if bit_idx == 8u4 { ack_nack } else { true }
+    };
+
+    // ---------- 主 FSM: (state, cnt, bit_idx, scl, sda) ----------
+    let n = match state {
+        I2S::Idle =>
+            if accept {
+                match cmd_op {
+                    // START: 总线空闲(scl=1)直接进 StRel; 传输中(scl=0)先入 StRelA 分相释放
+                    0 => if scl_r { (I2S::StRel, 0u16, 0u4, true, true) }
+                         else { (I2S::StRelA, 0u16, 0u4, false, true) },
+                    1 => (I2S::BitLowA, 0u16, 0u4, false, sda_r), // WRITE
+                    2 => (I2S::BitLowA, 0u16, 0u4, false, sda_r), // READ
+                    _ => (I2S::SpLow, 0u16, 0u4, false, sda_r),   // STOP
+                }
+            } else { (state, cnt, bit_idx, scl_r, sda_r) },
+        I2S::StRelA =>
+            if cnt == 1u16 { (I2S::StRel, 0u16, bit_idx, true, sda_r) }
+            else { (state, cnt_inc, bit_idx, scl_r, sda_r) },
+        I2S::StRel =>
+            if scl_i {
+                if phase_done { (I2S::StFall, 0u16, bit_idx, true, false) }
+                else { (state, cnt_inc, bit_idx, scl_r, sda_r) }
+            } else { (state, 0u16, bit_idx, scl_r, sda_r) },
+        I2S::StFall =>
+            // START 完成: SCL 拉低回 Idle (BitLowA 的 2clk 保护保证之后 SDA 安全)
+            if phase_done { (I2S::Idle, 0u16, bit_idx, false, sda_r) }
+            else { (state, cnt_inc, bit_idx, scl_r, sda_r) },
+        I2S::BitLowA =>
+            if cnt == 1u16 { (I2S::BitLowB, 0u16, bit_idx, false, bit_sda) }
+            else { (state, cnt_inc, bit_idx, scl_r, sda_r) },
+        I2S::BitLowB =>
+            if cnt == div_m3 { (I2S::BitHRel, 0u16, bit_idx, true, sda_r) }
+            else { (state, cnt_inc, bit_idx, scl_r, sda_r) },
+        I2S::BitHRel =>
+            if scl_i { (I2S::BitHigh, 1u16, bit_idx, scl_r, sda_r) }
+            else { (state, cnt, bit_idx, scl_r, sda_r) },
+        I2S::BitHigh =>
+            if phase_done {
+                if bit_idx == 8u4 { (I2S::Finish, 0u16, bit_idx, false, sda_r) }
+                else { (I2S::BitLowA, 0u16, bit_idx_inc, false, sda_r) }
+            } else { (state, cnt_inc, bit_idx, scl_r, sda_r) },
+        I2S::Finish => (I2S::Idle, 0u16, bit_idx, scl_r, sda_r),
+        I2S::SpLow =>
+            if cnt == 1u16 { (I2S::SpSda, 0u16, bit_idx, false, false) }
+            else { (state, cnt_inc, bit_idx, scl_r, sda_r) },
+        I2S::SpSda =>
+            if phase_done { (I2S::SpRel, 0u16, bit_idx, true, sda_r) }
+            else { (state, cnt_inc, bit_idx, scl_r, sda_r) },
+        I2S::SpRel =>
+            if scl_i { (I2S::SpHigh, 1u16, bit_idx, scl_r, sda_r) }
+            else { (state, cnt, bit_idx, scl_r, sda_r) },
+        I2S::SpHigh =>
+            if phase_done { (I2S::SpStop, 0u16, bit_idx, scl_r, true) }
+            else { (state, cnt_inc, bit_idx, scl_r, sda_r) },
+        I2S::SpStop =>
+            if phase_done { (I2S::Idle, 0u16, bit_idx, scl_r, sda_r) }
+            else { (state, cnt_inc, bit_idx, scl_r, sda_r) },
+    };
+
+    reg(clk) state reset(rst: I2S::Idle) = n.0;
+    reg(clk) cnt reset(rst: 0u16) = n.1;
+    reg(clk) bit_idx reset(rst: 0u4) = n.2;
+    reg(clk) scl_r reset(rst: true) = n.3;
+    reg(clk) sda_r reset(rst: true) = n.4;
+
+    // ---------- 数据/标志寄存器 ----------
+    let bit_advance = bit_end && bit_idx != 8u4;
+    reg(clk) tx_byte reset(rst: 0u8) =
+        if accept { cmd_data }
+        else if bit_advance { tx_shifted }
+        else { tx_byte };
+    let shift_next: uint<8> = trunc(concat(shift, sda_i.as_uint()));
+    reg(clk) shift reset(rst: 0u8) =
+        if sample_pt && is_read && bit_idx != 8u4 { shift_next } else { shift };
+    reg(clk) nack reset(rst: false) =
+        if sample_pt && is_write && bit_idx == 8u4 { sda_i } else { nack };
+    reg(clk) is_write reset(rst: false) = if accept { cmd_op == 1u2 } else { is_write };
+    reg(clk) is_read reset(rst: false) = if accept { cmd_op == 2u2 } else { is_read };
+    reg(clk) ack_nack reset(rst: false) = if accept { cmd_data.lsb() } else { ack_nack };
+
+    // ---------- 输出 ----------
+    let cmd_ready = is_idle;
+    let rsp_valid = is_finish;
+    let busy = !is_idle;
+    (cmd_ready, rsp_valid, shift, nack, busy, scl_r, sda_r)
+}

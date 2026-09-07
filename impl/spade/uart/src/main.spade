@@ -1,0 +1,144 @@
+// UART 全双工收发器 (8N1, LSB first). 1 tick = div clk, 1 bit = 16 tick = 16*div clk.
+// 返回元组 (output__ 高位到低位):
+//   (tx_ready, txd, tx_busy, rx_data, rx_valid, rx_err)
+
+// ---------------- 发送器 ----------------
+// frame = {stop=1, d7..d0, start=0} 10bit, lsb 当前在线上.
+entity tx_engine(
+    clk: clock,
+    rst: bool,
+    div: uint<16>,
+    tx_data: uint<8>,
+    tx_valid: bool,
+) -> (bool, bool, bool) {
+    decl busy;
+    decl frame;
+    decl div_cnt;
+    decl tick_cnt;
+    decl bit_idx;
+
+    let tx_ready = !busy;
+    let accept = tx_valid && tx_ready;
+    let div_m1: uint<16> = trunc(div - 1u16);
+    let tick_last = div_cnt == div_m1;
+    let advance = busy && tick_last && tick_cnt == 15u4;
+    let done = advance && bit_idx == 9u4;
+
+    let frame_w: uint<10> = frame; // 宽度锚定 (decl 默认 uint<1>)
+    let div_cnt_w: uint<16> = div_cnt;
+    let frame_shifted: uint<10> = trunc(frame_w >>. 1u10);
+    let div_cnt_inc: uint<16> = trunc(div_cnt_w + 1u16);
+    let tick_cnt_inc: uint<4> = trunc(tick_cnt + 1u4);
+    let bit_idx_inc: uint<4> = trunc(bit_idx + 1u4);
+    reg(clk) busy reset(rst: false) =
+        if accept { true } else if done { false } else { busy };
+    reg(clk) frame reset(rst: 0) =
+        if accept { concat(concat(1u1, tx_data), 0u1) }
+        else if advance { frame_shifted }
+        else { frame };
+    reg(clk) div_cnt reset(rst: 0) =
+        if !busy || tick_last { 0u16 } else { div_cnt_inc };
+    reg(clk) tick_cnt reset(rst: 0) =
+        if !busy { 0u4 } else if tick_last { tick_cnt_inc } else { tick_cnt };
+    reg(clk) bit_idx reset(rst: 0) =
+        if accept { 0u4 }
+        else if advance { if done { 0u4 } else { bit_idx_inc } }
+        else { bit_idx };
+
+    let txd = if busy { frame.lsb() } else { true };
+    (tx_ready, txd, busy)
+}
+
+// ---------------- 接收器 ----------------
+enum RxS { Idle, Start, StartWait, Data, Stop }
+
+entity rx_engine(
+    clk: clock,
+    rst: bool,
+    div: uint<16>,
+    rxd: bool,
+) -> (uint<8>, bool, bool) {
+    // 2FF 同步器 + 沿检测历史
+    reg(clk) meta reset(rst: true) = rxd;
+    reg(clk) s reset(rst: true) = meta;
+    reg(clk) s_prev reset(rst: true) = s;
+
+    decl state;
+    decl div_cnt;
+    decl tick_cnt;
+    decl bit_idx;
+    decl shift;
+    decl votes;
+
+    let is_idle = match state { RxS::Idle => true, _ => false };
+    let is_data = match state { RxS::Data => true, _ => false };
+    let is_stop = match state { RxS::Stop => true, _ => false };
+
+    let div_m1: uint<16> = trunc(div - 1u16);
+    let div_cnt_w: uint<16> = div_cnt; // 宽度锚定
+    let tick_last = div_cnt_w == div_m1;
+    let sample_now = div_cnt_w == 0u16; // 每 tick 首拍
+    let fall = s_prev && !s;
+
+    let state_next = match state {
+        RxS::Idle => if fall { RxS::Start } else { RxS::Idle },
+        RxS::Start =>
+            // 半位 (8 tick) 处确认仍为低, 否则假起始
+            if tick_cnt == 8u4 && sample_now {
+                if !s { RxS::StartWait } else { RxS::Idle }
+            } else { RxS::Start },
+        RxS::StartWait =>
+            // 等起始位结束 (tick 15) 再进 Data, 使数据位边界对齐
+            if tick_cnt == 15u4 && tick_last { RxS::Data } else { RxS::StartWait },
+        RxS::Data =>
+            if tick_cnt == 15u4 && tick_last && bit_idx == 7u3 { RxS::Stop }
+            else { RxS::Data },
+        RxS::Stop =>
+            if tick_cnt == 8u4 && sample_now { RxS::Idle } else { RxS::Stop },
+    };
+    reg(clk) state reset(rst: RxS::Idle) = state_next;
+
+    let running = !is_idle;
+    let div_cnt_inc: uint<16> = trunc(div_cnt_w + 1u16);
+    let tick_cnt_inc: uint<4> = trunc(tick_cnt + 1u4);
+    reg(clk) div_cnt reset(rst: 0) =
+        if !running || tick_last { 0u16 } else { div_cnt_inc };
+    reg(clk) tick_cnt reset(rst: 0) =
+        if !running { 0u4 } else if tick_last { tick_cnt_inc } else { tick_cnt };
+
+    // 数据位: tick 7/8/9 多数表决; 位末移入
+    let vote_now = is_data && sample_now
+        && (tick_cnt == 7u4 || tick_cnt == 8u4 || tick_cnt == 9u4);
+    let bit_end = is_data && tick_cnt == 15u4 && tick_last;
+    let voted = votes >= 2u2;
+    let votes_inc: uint<2> = trunc(votes + zext(s.as_uint()));
+    let bit_idx_inc: uint<3> = trunc(bit_idx + 1u3);
+    let shift_next: uint<8> = trunc(concat(voted.as_uint(), shift) >>. 1u9);
+    reg(clk) votes reset(rst: 0) =
+        if bit_end { 0u2 }
+        else if vote_now { votes_inc }
+        else { votes };
+    reg(clk) bit_idx reset(rst: 0) =
+        if bit_end { bit_idx_inc } else { bit_idx };
+    reg(clk) shift reset(rst: 0u8) =
+        if bit_end { shift_next } else { shift };
+
+    // 停止位中点单拍脉冲
+    let rx_valid = is_stop && tick_cnt == 8u4 && sample_now;
+    let rx_err = rx_valid && !s; // 停止位采到 0 -> 帧错误
+    (shift, rx_valid, rx_err)
+}
+
+// ---------------- 顶层 ----------------
+entity uart_trx_impl(
+    clk: clock,
+    rst: bool,
+    div: uint<16>,
+    tx_data: uint<8>,
+    tx_valid: bool,
+    rxd: bool,
+) -> (bool, bool, bool, uint<8>, bool, bool) {
+    let (tx_ready, txd, tx_busy) = inst tx_engine(clk, rst, div, tx_data, tx_valid);
+    let (rx_data, rx_valid, rx_err) = inst rx_engine(clk, rst, div, rxd);
+    (tx_ready, txd, tx_busy, rx_data, rx_valid, rx_err)
+}

@@ -1,0 +1,81 @@
+// 16 抽头定点 FIR (Q1.15), 位精确: acc = Σ h[k]·x[n-k]; y = sat((acc + 0x4000) >> 15)
+// 返回元组 (output__ 高位到低位): (in_ready, out_valid, out_data)
+// LAT = 1: 样本被接收的沿 -> 下一拍 out_valid=1 + 结果.
+// 乘法走 extern Verilog (signed 声明的 16x16): spade 生成的 $signed(x)*$signed(c)
+// 在 Verilog 上下文扩展规则下变成 32x32 $mul, 会使 yosys/abc 病态变慢.
+extern fn mul16s(a: int<16>, b: int<16>) -> int<32>;
+entity fir16_impl(
+    clk: clock,
+    rst: bool,
+    coef_we: bool,
+    coef_addr: uint<4>,
+    coef_data: int<16>,
+    in_valid: bool,
+    in_data: int<16>,
+    out_ready: bool,
+) -> (bool, bool, int<16>) {
+    decl out_valid;
+    decl out_data;
+    decl coefs;
+    decl hist;
+
+    // ---------- 握手 ----------
+    let in_ready = out_ready || !out_valid;
+    let accept = in_valid && in_ready;
+    let consumed = out_valid && out_ready;
+
+    // ---------- 系数 (写入下一拍生效) ----------
+    let indices: [uint<4>; 16] = [
+        0u4, 1u4, 2u4, 3u4, 4u4, 5u4, 6u4, 7u4,
+        8u4, 9u4, 10u4, 11u4, 12u4, 13u4, 14u4, 15u4,
+    ];
+    let coefs_w: [int<16>; 16] = coefs; // 宽度锚定
+    let coefs_next: [int<16>; 16] = if coef_we {
+        coefs_w.zip(indices).map(fn |(c, i)|
+            if i == coef_addr { coef_data } else { c })
+    } else { coefs_w };
+    reg(clk) coefs reset(rst: [0i16; 16]) = coefs_next;
+
+    // ---------- 输入历史 (hist[0] 最新) ----------
+    let hist_w: [int<16>; 16] = hist;
+    let hist_tail = hist_w.split_at::<15>().0; // hist[0..14]
+    let hist_next: [int<16>; 16] = [in_data].concat(hist_tail);
+    reg(clk) hist reset(rst: [0i16; 16]) = if accept { hist_next } else { hist_w };
+
+    // ---------- 乘加 (对"接收后"的历史求值, 与 accept 沿对齐) ----------
+    let prods: [int<32>; 16] = hist_next.zip(coefs_w).map(fn |(x, c)| mul16s(x, c));
+    // 平衡加法树 (4 级), 避免 16 级串行链拖长关键路径
+    let q0 = prods[0] + prods[1];
+    let q1 = prods[2] + prods[3];
+    let q2 = prods[4] + prods[5];
+    let q3 = prods[6] + prods[7];
+    let q4 = prods[8] + prods[9];
+    let q5 = prods[10] + prods[11];
+    let q6 = prods[12] + prods[13];
+    let q7 = prods[14] + prods[15];
+    let r0 = q0 + q1;
+    let r1 = q2 + q3;
+    let r2 = q4 + q5;
+    let r3 = q6 + q7;
+    let s0 = r0 + r1;
+    let s1 = r2 + r3;
+    let acc: int<36> = s0 + s1;
+
+    // round-half-up (+0x4000) 后算术右移 15, 再饱和到 int16
+    // 注: spade 的 >> 生成无符号逻辑右移, 负数会破坏; 用位切片+符号重解释实现算术右移.
+    let acc_r: int<36> = trunc(acc + 16384i36);
+    let y_bits = acc_r.as_bits().split_at::<15>().1; // bit15..35, lsb 在前
+    let y_sh: int<21> = y_bits.as_int(); // msb=acc_r[35] 符号位 => 算术右移结果
+    let y_sat: int<16> =
+        if y_sh > 32767i21 { 32767i16 }
+        else if y_sh < -32768i21 { -32768i16 }
+        else { trunc(y_sh) };
+
+    // ---------- 输出寄存器 (背压保持) ----------
+    reg(clk) out_valid reset(rst: false) =
+        if accept { true } else if consumed { false } else { out_valid };
+    reg(clk) out_data reset(rst: 0i16) =
+        if accept { y_sat } else { out_data };
+
+    (in_ready, out_valid, out_data)
+}

@@ -1,0 +1,76 @@
+// 4x4 矩阵乘 C = A x B (int8 -> int32). 4 拍入行, 4 拍出行.
+// 打包: a_row[8k +: 8] = A[i][k]; c_row[32j +: 32] = C[i][j].
+// 返回元组 (output__ 高位到低位): (in_ready, out_valid, c_row)
+
+enum MMS { Collect, Output }
+
+// 乘法走 extern Verilog (signed 声明的 8x8): spade 生成的 $signed(x)*$signed(c)
+// 会被 Verilog 上下文扩展规则放大, 使综合面积/时间恶化.
+extern fn mul8s(a: int<8>, b: int<8>) -> int<16>;
+
+// 取打包行的第 k 字节 (LSB 为元素 0), 重解释为 int8
+fn byte_at(row: uint<32>, k: uint<2>) -> int<8> {
+    row.as_bits().chunks::<8>()[k].as_int()
+}
+
+// C[i][j] = sum_k A[i][k]*B[k][j]  (精确累加, int32)
+fn c_elem(a_r: [uint<32>; 4], b_r: [uint<32>; 4], i: uint<2>, j: uint<2>) -> int<32> {
+    let ks: [uint<2>; 4] = [0u2, 1u2, 2u2, 3u2];
+    let prods: [int<16>; 4] = ks.map(fn |k| mul8s(byte_at(a_r[i], k), byte_at(b_r[k], j)));
+    prods.fold(0i32, fn |acc, p| trunc(acc + sext(p)))
+}
+
+entity matmul4x4_impl(
+    clk: clock,
+    rst: bool,
+    in_valid: bool,
+    a_row: uint<32>,
+    b_row: uint<32>,
+    out_ready: bool,
+) -> (bool, bool, uint<128>) {
+    decl state;
+    decl in_idx;
+    decl out_idx;
+    decl a_rows;
+    decl b_rows;
+
+    let is_collect = match state { MMS::Collect => true, _ => false };
+    let in_ready = is_collect;
+    let accept = in_valid && in_ready;
+    let last_in = accept && in_idx == 3u2;
+    let out_valid = !is_collect;
+    let drain = out_valid && out_ready;
+    let last_out = drain && out_idx == 3u2;
+
+    let state_next = if last_in { MMS::Output }
+        else if last_out { MMS::Collect }
+        else { state };
+    reg(clk) state reset(rst: MMS::Collect) = state_next;
+
+    let in_idx_inc: uint<2> = trunc(in_idx + 1u2);
+    let out_idx_inc: uint<2> = trunc(out_idx + 1u2);
+    reg(clk) in_idx reset(rst: 0u2) =
+        if last_in { 0u2 } else if accept { in_idx_inc } else { in_idx };
+    reg(clk) out_idx reset(rst: 0u2) =
+        if last_out { 0u2 } else if drain { out_idx_inc } else { out_idx };
+
+    let idxs: [uint<2>; 4] = [0u2, 1u2, 2u2, 3u2];
+    let a_w: [uint<32>; 4] = a_rows; // 宽度锚定
+    let b_w: [uint<32>; 4] = b_rows;
+    reg(clk) a_rows reset(rst: [0u32; 4]) =
+        if accept { a_w.zip(idxs).map(fn |(r, i)| if i == in_idx { a_row } else { r }) }
+        else { a_w };
+    reg(clk) b_rows reset(rst: [0u32; 4]) =
+        if accept { b_w.zip(idxs).map(fn |(r, i)| if i == in_idx { b_row } else { r }) }
+        else { b_w };
+
+    // 当前输出行 (组合计算, 背压期间 out_idx 不动 => 稳定)
+    let c0 = c_elem(a_w, b_w, out_idx, 0u2);
+    let c1 = c_elem(a_w, b_w, out_idx, 1u2);
+    let c2 = c_elem(a_w, b_w, out_idx, 2u2);
+    let c3 = c_elem(a_w, b_w, out_idx, 3u2);
+    let c_row: uint<128> =
+        concat(c3.as_uint(), concat(c2.as_uint(), concat(c1.as_uint(), c0.as_uint())));
+
+    (in_ready, out_valid, c_row)
+}

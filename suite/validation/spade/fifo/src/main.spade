@@ -1,0 +1,43 @@
+// sync_fifo 的 Spade 实现 (参考, 套件自检用). 契约见 cases/fifo/SPEC.md.
+// 顶层实体名 sync_fifo_impl; 端口适配由 src/top_wrapper.v 完成.
+// 注: spade 块内不允许前向引用, push/pop 条件在寄存器体内联.
+use std::mem::{clocked_memory, read_memory};
+
+entity sync_fifo_impl(
+    clk: clock,
+    rst: bool,
+    in_valid: bool,
+    in_data: uint<8>,
+    out_ready: bool,
+) -> (bool, bool, uint<8>, uint<5>, bool, bool) {
+    // 返回顺序: (in_ready, out_valid, out_data, count, almost_full, almost_empty)
+    // output__ 位段: 第一个元素占最高位.
+    reg(clk) count reset(rst: 0) = {
+        let push = in_valid && (count < 16 || (out_ready && count != 0));
+        let pop = out_ready && count != 0;
+        match (push, pop) {
+            (true, false) => trunc(count + 1),
+            (false, true) => trunc(count - 1),
+            _ => count,
+        }
+    };
+    reg(clk) wr_ptr reset(rst: 0) = {
+        let push = in_valid && (count < 16 || (out_ready && count != 0));
+        if push { trunc(wr_ptr + 1) } else { wr_ptr }
+    };
+    reg(clk) rd_ptr reset(rst: 0) = {
+        let pop = out_ready && count != 0;
+        if pop { trunc(rd_ptr + 1) } else { rd_ptr }
+    };
+
+    let full = count == 16;
+    let empty = count == 0;
+    let out_valid = !empty;
+    let in_ready = !full || (out_valid && out_ready);   // SPEC: 满且同拍弹出时仍可写
+    let push = in_valid && in_ready;
+
+    let mem = inst clocked_memory::<16, 1, 4, uint<8>>(clk, [(push, wr_ptr, in_data)]);
+    let out_data = inst read_memory(mem, rd_ptr);
+
+    (in_ready, out_valid, out_data, count, count >= 12, count <= 4)
+}

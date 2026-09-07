@@ -1,0 +1,78 @@
+{
+ "lang": "spade",
+ "case": "uart",
+ "top": "uart_trx",
+ "seed": 42,
+ "timestamp": "2026-09-07T07:59:06",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/spade/uart/build/spade.sv",
+   "impl/spade/uart/src/top_wrapper.v"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 1.1,
+  "tests": [
+   {
+    "name": "test_tx_single",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_tx_backtoback",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_single",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_stream",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_framing_err",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_false_start",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_loopback",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_reset_during_rx",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 8,
+  "total": 8
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 3711.0592,
+  "cells": 374,
+  "crit_ns": 2.9,
+  "fmax_mhz": 345.07,
+  "power_w": 0.000336,
+  "sta_rc": 0
+ },
+ "loc": {
+  "lines": 150,
+  "files": 2
+ },
+ "elapsed_s": 3.5
+}

@@ -1,0 +1,6 @@
+# swim 工程名: 必须等于案例目录名 (fifo/uart/fir/matmul/i2c_master),
+# 生成模块命名空间 = 该名字 (如 fifo::sync_fifo_impl).
+name = "fifo"
+
+# 共享 path compiler (已预构建, 不要改; 否则 swim 会在本工程内重新编译整个编译器)
+compiler = { path = "/fact_home/yiyangyuan/tools/spade-src" }

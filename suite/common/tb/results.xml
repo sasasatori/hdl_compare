@@ -1,0 +1,6 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="42" />
+    <testcase name="debug_i2c3" classname="tb_debug" file="/fact_home/yiyangyuan/workspace/projects/hdl_compare/suite/common/tb/tb_debug.py" lineno="14" time="0.1094818115234375" sim_time_ns="28270.0" ratio_time="258216.40696864112" />
+  </testsuite>
+</testsuites>

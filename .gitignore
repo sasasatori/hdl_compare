@@ -1,0 +1,13 @@
+# 构建/仿真产物 (可再生成, 不入库)
+.scala-build/
+__pycache__/
+*.pyc
+build/
+target/
+*.vcd
+*.fst
+*.vcd.gz
+# 评估中间产物: 保留 results/<lang>/<case>.json 与 report/agent_time, 丢弃大型工作目录
+results/*/*/sim/
+results/*/*/synth/
+results/*/*/run.log

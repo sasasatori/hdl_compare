@@ -1,0 +1,17 @@
+// Spade 源码模板. 顶层实体名必须为 <top>_impl (如 sync_fifo_impl), 由 src/top_wrapper.v 适配端口契约.
+// Spade v0.20 语法要点:
+//   reg(clk) x reset(rst: 0) = <next>;      // 同步高有效复位寄存器
+//   无 always 块; 实体体内为数据流表达式; 不允许前向引用 (先声明后使用)
+//   存储: use std::mem::{clocked_memory, read_memory}  (同步写/异步读)
+//   结构化输出: 返回元组/struct, 全部打包进 output__ 端口 (第一个元素占最高位段)
+//   输入端口在 Verilog 侧命名为 <名>_i
+entity sync_fifo_impl(
+    clk: clock,
+    rst: bool,
+    in_valid: bool,
+    in_data: uint<8>,
+    out_ready: bool,
+) -> (bool, bool, uint<8>, uint<5>, bool, bool) {
+    // TODO: 实现. 返回顺序决定 output__ 位段, 必须与 top_wrapper.v 的拆分一致.
+    (in_valid, in_valid, in_data, trunc(0), in_valid, in_valid)  // 占位, 必改
+}

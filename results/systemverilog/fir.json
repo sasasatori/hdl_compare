@@ -1,0 +1,72 @@
+{
+ "lang": "systemverilog",
+ "case": "fir",
+ "top": "fir16",
+ "seed": 42,
+ "timestamp": "2026-09-07T08:13:28",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/systemverilog/fir/src/fir16.sv"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 0.2,
+  "tests": [
+   {
+    "name": "test_impulse",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_known_coefs",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_random",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_saturation",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_backpressure",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_throughput",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_coef_reload",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 7,
+  "total": 7
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 192990.0928,
+  "cells": 26577,
+  "crit_ns": 21.25,
+  "fmax_mhz": 47.06,
+  "power_w": 0.202,
+  "sta_rc": 0
+ },
+ "loc": {
+  "lines": 67,
+  "files": 1
+ },
+ "elapsed_s": 686.3
+}

@@ -1,0 +1,77 @@
+{
+ "lang": "systemverilog",
+ "case": "uart",
+ "top": "uart_trx",
+ "seed": 42,
+ "timestamp": "2026-09-07T08:13:39",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/systemverilog/uart/src/uart_trx.sv"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 1.1,
+  "tests": [
+   {
+    "name": "test_tx_single",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_tx_backtoback",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_single",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_stream",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_framing_err",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_rx_false_start",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_loopback",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_reset_during_rx",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 8,
+  "total": 8
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 4732.0384,
+  "cells": 517,
+  "crit_ns": 2.78,
+  "fmax_mhz": 359.75,
+  "power_w": 0.000386,
+  "sta_rc": 0
+ },
+ "loc": {
+  "lines": 178,
+  "files": 1
+ },
+ "elapsed_s": 2.1
+}

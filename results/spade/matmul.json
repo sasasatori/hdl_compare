@@ -1,0 +1,69 @@
+{
+ "lang": "spade",
+ "case": "matmul",
+ "top": "matmul4x4",
+ "seed": 42,
+ "timestamp": "2026-09-07T09:20:41",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/spade/matmul/build/spade.sv",
+   "impl/spade/matmul/src/mul8s.v",
+   "impl/spade/matmul/src/top_wrapper.v"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 0.2,
+  "tests": [
+   {
+    "name": "test_identity",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_known",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_random",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_extremes",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_backpressure",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_backtoback",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 6,
+  "total": 6
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 53716.5184,
+  "cells": 6969,
+  "crit_ns": 3.56,
+  "fmax_mhz": 280.64,
+  "power_w": 0.00275,
+  "sta_rc": 0
+ },
+ "loc": {
+  "lines": 94,
+  "files": 3
+ },
+ "elapsed_s": 4.6
+}

@@ -1,0 +1,41 @@
+// 同步 FIFO (FWFT), DEPTH=16, WIDTH=8.
+// 返回元组顺序 (output__ 高位到低位):
+//   (in_ready, out_valid, out_data, count, almost_full, almost_empty)
+use std::mem::{clocked_memory, read_memory};
+
+entity sync_fifo_impl(
+    clk: clock,
+    rst: bool,
+    in_valid: bool,
+    in_data: uint<8>,
+    out_ready: bool,
+) -> (bool, bool, uint<8>, uint<5>, bool, bool) {
+    decl count;
+    decl wr_ptr;
+    decl rd_ptr;
+
+    let out_valid = count != 0u5;
+    // 满时同拍弹 -> 当拍仍可推 (SPEC 3: 满队列同拍推弹 count 保持 16)
+    let in_ready = count < 16u5 || (out_valid && out_ready);
+
+    let push = in_valid && in_ready;
+    let pop = out_valid && out_ready;
+
+    let count_next: uint<5> = match (push, pop) {
+        (true, false) => trunc(count + 1u5),
+        (false, true) => trunc(count - 1u5),
+        _ => count,
+    };
+    reg(clk) count reset(rst: 0) = count_next;
+    reg(clk) wr_ptr reset(rst: 0) = if push { trunc(wr_ptr + 1u4) } else { wr_ptr };
+    reg(clk) rd_ptr reset(rst: 0) = if pop { trunc(rd_ptr + 1u4) } else { rd_ptr };
+
+    let mem: Memory<uint<8>, 16> = inst clocked_memory(clk, [(push, wr_ptr, in_data)]);
+    // FWFT: 组合读出队首
+    let out_data = inst read_memory(mem, rd_ptr);
+
+    let almost_full = count >= 12u5;
+    let almost_empty = count <= 4u5;
+
+    (in_ready, out_valid, out_data, count, almost_full, almost_empty)
+}

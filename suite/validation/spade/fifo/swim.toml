@@ -1,0 +1,4 @@
+name = "fifo"
+
+# 共享 path compiler (~/tools/spade-src 已预构建, 避免每个工程重复编译编译器)
+compiler = { path = "/fact_home/yiyangyuan/tools/spade-src" }
