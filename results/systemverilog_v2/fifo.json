@@ -1,0 +1,68 @@
+{
+ "lang": "systemverilog_v2",
+ "case": "fifo",
+ "top": "sync_fifo",
+ "seed": 42,
+ "timestamp": "2026-09-07T14:09:38",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/systemverilog_v2/lib/svp.sv",
+   "impl/systemverilog_v2/fifo/src/sync_fifo.sv"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 5.5,
+  "tests": [
+   {
+    "name": "test_reset_state",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_single_xfer",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_fill_and_drain",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_simul_push_pop",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_random_stress",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_full_throughput",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 6,
+  "total": 6
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 5388.9184,
+  "cells": 318,
+  "sta_rc": 0,
+  "crit_ns": 2.44,
+  "fmax_mhz": 409.49,
+  "power_w": 0.000738
+ },
+ "loc": {
+  "lines": 20,
+  "files": 1
+ },
+ "elapsed_s": 6.6
+}

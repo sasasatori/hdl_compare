@@ -1,0 +1,73 @@
+{
+ "lang": "systemverilog_v2",
+ "case": "i2c_master",
+ "top": "i2c_master",
+ "seed": 42,
+ "timestamp": "2026-09-07T14:10:05",
+ "build": {
+  "ok": true,
+  "sources": [
+   "impl/systemverilog_v2/lib/svp.sv",
+   "impl/systemverilog_v2/i2c_master/src/i2c_master.sv"
+  ]
+ },
+ "sim": {
+  "sim": "verilator",
+  "ok": true,
+  "duration_s": 4.8,
+  "tests": [
+   {
+    "name": "test_start_stop",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_write_ack",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_write_nack",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_read",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_clock_stretch",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_reg_read_seq",
+    "passed": true,
+    "msg": ""
+   },
+   {
+    "name": "test_multi_byte",
+    "passed": true,
+    "msg": ""
+   }
+  ],
+  "pass": 7,
+  "total": 7
+ },
+ "synth": {
+  "ok": true,
+  "has_latch": false,
+  "area_um2": 3429.5392,
+  "cells": 384,
+  "sta_rc": 0,
+  "crit_ns": 2.94,
+  "fmax_mhz": 340.41,
+  "power_w": 0.000278
+ },
+ "loc": {
+  "lines": 202,
+  "files": 1
+ },
+ "elapsed_s": 5.7
+}
